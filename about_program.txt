@@ -1,0 +1,13 @@
+1.make_divfile.py					:program of make div file(copy program from read_program.py)
+2.hmm_demo.py					: hmm_dmeo program. it make hmm model from all data and plot state.
+3.plot_all_data_adjust.py					: plot adjusted all data.
+4.pre_train_program.py					: divide hmmmodel train data ,classifcation data and test data 
+5.make_classification_model.py				:make classification model program (plot program)
+6.hmm_classification_program_3.py				:classification_program by hmm
+7.hmm_classification_program_3_addave.py			:classification_program by hmm (addition average data) 
+8.hmm_classification_program_3_addave_ensemble.py		:classification_program by hmm (addition average data and ensemble train)
+9.hmm_classification_program_3_addave_ensemble_accplot.py	:acc plot range addition average num
+###
+
+cross_correlate_porogram.py				:calculate cross corirate and plot
+
