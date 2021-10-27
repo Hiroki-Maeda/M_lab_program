@@ -14,8 +14,12 @@ def lowpass(x, samplerate, fp, fs, gpass, gstop):
 	y = signal.filtfilt(b,a,x)
 	return y
 
-Data_Path = os.path.join("/","mnt","c","Users","HirokiMaeda","Desktop","M1","1_word_HMM","data","div_data")
-Save_Path =  os.path.join("/","mnt","c","Users","HirokiMaeda","Desktop","M1","1_word_HMM","picture")
+#Data_Path = os.path.join("/","mnt","c","Users","HirokiMaeda","Desktop","M1","1_word_HMM","data","div_data")
+#Save_Path =  os.path.join("/","mnt","c","Users","HirokiMaeda","Desktop","M1","1_word_HMM","picture")
+
+Data_Path = os.path.join("/","mnt","c","Users","Hirok","Desktop","M1","1_word_HMM","data","div_data")
+Save_Path =  os.path.join("/","mnt","c","Users","Hirok","Desktop","M1","1_word_HMM","picture")
+
 
 words = ["a","i","u","e","o"]
 ch_names = [" F7-REF"," T7-REF"," Cz-REF"]

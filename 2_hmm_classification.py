@@ -13,7 +13,7 @@ import collections
 import random
 
 
-
+#filtaring method
 def lowpass(x, samplerate, fp, fs, gpass, gstop):
 	fn = samplerate/2
 	wp = fp/fn
@@ -23,26 +23,46 @@ def lowpass(x, samplerate, fp, fs, gpass, gstop):
 	y = signal.filtfilt(b,a,x)
 	return y
 
-#Data_Path = os.path.join("/","mnt","c","Users","HirokiMaeda","Desktop","M1","1_word_HMM","data","vec_data")
-##Data_Path = os.path.join("/","mnt","c","Users","HirokiMaeda","Desktop","M1","1_word_HMM","data","div_data")
 
+#read data method
+def read_data(Data_Path,words,ch_names,one_data_len,one_state_num,b_num,samplerate=1000,fp=30,fs=50,gpass=3,gstop=40):	
+	all_filted_data = []
+	word_num = len(words)
+	print("read end")
+	for j in range(len(words)):
+		for k in range(len(ch_names)):
+	
+			data = pd.read_csv(os.path.join(Data_Path,"data_"  + words[j] +ch_names[k] +".csv")).values
+		
+			filted_data = np.empty((0,data.shape[1]-100),float)
+			for i in range(data.shape[0]):
+				filted_data = np.vstack([filted_data,lowpass(data[i,:],samplerate,fp,fs,gpass,gstop)[50:-50]])	
+				
 
-#Save_Path =  os.path.join("/","mnt","c","Users","HirokiMaeda","Desktop","M1","1_word_HMM","picture")
+			filted_data = (filted_data-filted_data.mean(axis=1).reshape(-1,1))/filted_data.std(axis=1).reshape(-1,1)
+				
+			
+			if j == 0 and k == 0:
+				(data_num, data_length) = filted_data.shape	
+				all_filted_data = np.zeros((word_num*b_num,data_num,data_length))
+			####
+			all_filted_data[j*b_num+k] = filted_data	
+	print("read end")	
 
-Data_Path = os.path.join("/","mnt","c","Users","Hirok","Desktop","M1","1_word_HMM","data","vec_data")
-#Data_Path = os.path.join("/","mnt","c","Users","Hirok","Desktop","M1","1_word_HMM","data","div_data")
-
-
+	return all_filted_data
+	
+#config
+#Data_Path = os.path.join("/","mnt","c","Users","Hirok","Desktop","M1","1_word_HMM","data","vec_data")
+Data_Path = os.path.join("/","mnt","c","Users","Hirok","Desktop","M1","1_word_HMM","data","div_data")
 Save_Path =  os.path.join("/","mnt","c","Users","Hirok","Desktop","M1","1_word_HMM","picture")
 
 
 color = ["#000000","#44ffff","#88ffff","#bbffff","#eeffff","#ff44ff","#ff88ff","#ffbbff","#ffeeff","#ffff44","#ffff88","#ffffbb","#ffffee","#444444","#888888","#bbbbbb","#eeeeee","#44ff44","#88ff88","#bbffbb","#eeffee"]
 words = ["a","i","u","e","o"]
-#ch_names = [" F7-REF"," T7-REF"," Cz-REF"]
-ch_names = ["_F7-T7","_T7-Cz","_Cz-F7"]
+ch_names = [" F7-REF"," T7-REF"," Cz-REF"]
+#ch_names = ["_F7-T7","_T7-Cz","_Cz-F7"]
 fig_flag = 0
 b_num = len(ch_names)
-#b_num = 1
 word_num = len(words)
 all_data = np.empty((b_num,0))
 one_data_len= 924
@@ -53,55 +73,31 @@ data_div_state =[[[[] for i in range(one_state_num)] for j in range(b_num)] for 
 data_div_state_0 = [[]for i in range(b_num)]
 sum_data = np.empty((b_num,0))
 set_init = True
-hmm_trainnum_rate = 0.05
-#classification_modelnum_rate = 0.4
-test_num_rate = 0.95
+hmm_trainnum_rate = 0.3
+classification_modelnum_rate = 0.4
+test_num_rate = 0.3
 Restrict = 1
-test_add_num = 10
-
-all_filted_data = []
-print("read start")
-for j in range(len(words)):
-	temp_sum_data = np.empty((0,one_data_len))
-	for k in range(b_num):
-		temp_data = [[] for i in range(one_state_num+1)]
-
-		
-		data = pd.read_csv(os.path.join(Data_Path,"data_"  + words[j] +ch_names[k] +".csv")).values
-		#Data_Path = os.path.join("/","mnt","c","Users","HirokiMaeda","Desktop","M1","1_word_HMM","data","vec_data")
-		#data = pd.read_csv(os.path.join(Data_Path,"data_a_Cz-F7.csv")).values
-		samplerate = 1000
-		fp = 30
-		fs = 50
-
-		gpass = 3
-		gstop = 40
-		filted_data = np.empty((0,data.shape[1]-100),float)
-		for i in range(data.shape[0]):
-			filted_data = np.vstack([filted_data,lowpass(data[i,:],samplerate,fp,fs,gpass,gstop)[50:-50]])	
-			#print("filted "+str(i)+" sample")
 
 
-		filted_data = (filted_data-filted_data.mean(axis=1).reshape(-1,1))/filted_data.std(axis=1).reshape(-1,1)
-		(data_num, data_length) = filted_data.shape
-				
-		
-		if j == 0 and k == 0:
-			all_filted_data = np.zeros((word_num*b_num,data_num,data_length))
-		####
-		all_filted_data[j*b_num+k] = filted_data	
-		#print(temp_sum_data.shape)
-print("read end")	
+#read data
+all_filted_data = read_data(Data_Path,words,ch_names,one_data_len,one_state_num,b_num,samplerate=1000,fp=30,fs=50,gpass=3,gstop=40)
+(data_num,data_length) = all_filted_data[0].shape
+
+
+#divide into train data or test data
 train_num = round(data_num*hmm_trainnum_rate)
 test_num = round(data_num*test_num_rate)
 train_shuffle = random.sample(range(data_num),data_num) 
-print(f"data_num:{data_num}")
+
 train_data = np.zeros([word_num*b_num,train_num,data_length])
 test_data = np.zeros([word_num*b_num,test_num,data_length])
 
 train_data = all_filted_data[:,train_shuffle[0:train_num],:]
 test_data = all_filted_data[:,train_shuffle[train_num:data_num],:]
 #hmm_model = hmm.GaussianHMM(n_components=state_num,covariance_type="full",init_params="")
+
+
+
 if set_init == True:
 	model = [hmm.GaussianHMM(n_components=one_state_num,covariance_type="full",init_params="") for i in range(word_num)]
 else:
@@ -156,13 +152,7 @@ for i in range(word_num):
 		#init cov
 		train_cov = np.tile(np.identity(b_num),(one_state_num,1,1))
 		for s_i in range(one_state_num):
-			if b_num ==1:
-				train_cov[s_i] = np.cov(train_data[i,:,s_i*one_state_len:(1+s_i)*one_state_len].reshape(1,-1))
-
-			else:
-				train_cov[s_i] = np.cov(train_data[i*b_num:i*b_num+2,:,s_i*one_state_len:(1+s_i)*one_state_len].reshape((2,-1)),train_data[i*b_num+2,:,s_i*one_state_len:(1+s_i)*one_state_len].reshape((1,-1)),rowvar=1)
-
-
+			train_cov[s_i] = np.cov(train_data[i*b_num:i*b_num+2,:,s_i*one_state_len:(1+s_i)*one_state_len].reshape((2,-1)),train_data[i*b_num+2,:,s_i*one_state_len:(1+s_i)*one_state_len].reshape((1,-1)),rowvar=1)
 
 		#train_cov[i*one_state_num+j+1] = np.cov(data_div_state[i,0:2,j],data_div_state[i,2,j],rowvar=1)
 
@@ -182,22 +172,24 @@ print("train end")
 print("classification start")
 prob_ans = np.zeros(word_num)
 ans_count = 0
+confusion_matrix = np.zeros((word_num,word_num))
+
 for i in range(word_num):	
 	print("classification : ",i)
-	for j in range(round(test_num/test_add_num)):
+	for j in range(test_num):
 		temp = np.zeros((0,data_length))
 		for k in range(b_num):
-			temp = np.vstack([temp,test_data[i*b_num+k,j*test_add_num:(1+j)*test_add_num,:].mean(axis=0)]) 
-		if j == 0:
-			print(temp.shape)
+			temp = np.vstack([temp,test_data[i*b_num+k,j,:]]) 
 		for k in range(word_num):
 			prob_ans[k] = model[k].score(temp.T)
 		if j==0:
 			print(prob_ans)
 		ans.append(np.argmax(prob_ans))		
+		confusion_matrix[i,ans[-1]] += 1
 		if ans[-1]==i:
 			ans_count +=1
 print("classification end")
 print("ans : ",ans)
-print("ans rate  : ",ans_count/(word_num*test_num/test_add_num))
-
+print("ans rate  : ",ans_count/(word_num*test_num))
+print("confusion matrix")
+print(confusion_matrix)

@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 import os
 
-Data_Path = os.path.join("/","mnt","c","Users","HirokiMaeda","Desktop","M1","1_word_HMM","data","div_data")
-Save_Path = os.path.join("/","mnt","c","Users","HirokiMaeda","Desktop","M1","1_word_HMM","data","vec_data")
+Data_Path = os.path.join("/","mnt","c","Users","Hirok","Desktop","M1","1_word_HMM","data","covert","div_data")
+Save_Path = os.path.join("/","mnt","c","Users","Hirok","Desktop","M1","1_word_HMM","data","covert","vec_data")
 words = ["a","i","u","e","o"]
 ch_names = [" F7-REF"," T7-REF"," Cz-REF"]
 vec_names = ["F7-T7","T7-Cz","Cz-F7"]

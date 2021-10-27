@@ -12,8 +12,9 @@ from scipy import signal
 import collections
 import random
 import statistics
+import math
 
-
+#filtaring method
 def lowpass(x, samplerate, fp, fs, gpass, gstop):
 	fn = samplerate/2
 	wp = fp/fn
@@ -23,15 +24,36 @@ def lowpass(x, samplerate, fp, fs, gpass, gstop):
 	y = signal.filtfilt(b,a,x)
 	return y
 
-#Data_Path = os.path.join("/","mnt","c","Users","HirokiMaeda","Desktop","M1","1_word_HMM","data","vec_data")
-##Data_Path = os.path.join("/","mnt","c","Users","HirokiMaeda","Desktop","M1","1_word_HMM","data","div_data")
 
+#read data method
+def read_data(Data_Path,words,ch_names,one_data_len,one_state_num,b_num,samplerate=1000,fp=30,fs=50,gpass=3,gstop=40):	
+	all_filted_data = []
+	word_num = len(words)
+	print("read end")
+	for j in range(len(words)):
+		for k in range(len(ch_names)):
+	
+			data = pd.read_csv(os.path.join(Data_Path,"data_"  + words[j] +ch_names[k] +".csv")).values
+		
+			filted_data = np.empty((0,data.shape[1]-100),float)
+			for i in range(data.shape[0]):
+				filted_data = np.vstack([filted_data,lowpass(data[i,:],samplerate,fp,fs,gpass,gstop)[50:-50]])	
+				
 
-#Save_Path =  os.path.join("/","mnt","c","Users","HirokiMaeda","Desktop","M1","1_word_HMM","picture")
+			filted_data = (filted_data-filted_data.mean(axis=1).reshape(-1,1))/filted_data.std(axis=1).reshape(-1,1)
+				
+			
+			if j == 0 and k == 0:
+				(data_num, data_length) = filted_data.shape	
+				all_filted_data = np.zeros((word_num*b_num,data_num,data_length))
+			####
+			all_filted_data[j*b_num+k] = filted_data	
+	print("read end")	
 
+	return all_filted_data
 
-Data_Path = os.path.join("/","mnt","c","Users","Hirok","Desktop","M1","1_word_HMM","data","vec_data")
-#Data_Path = os.path.join("/","mnt","c","Users","Hirok","Desktop","M1","1_word_HMM","data","div_data")
+#Data_Path = os.path.join("/","mnt","c","Users","Hirok","Desktop","M1","1_word_HMM","data","covert","vec_data")
+Data_Path = os.path.join("/","mnt","c","Users","Hirok","Desktop","M1","1_word_HMM","data","covert","div_data")
 
 
 Save_Path =  os.path.join("/","mnt","c","Users","Hirok","Desktop","M1","1_word_HMM","picture")
@@ -39,8 +61,8 @@ Save_Path =  os.path.join("/","mnt","c","Users","Hirok","Desktop","M1","1_word_H
 
 color = ["#000000","#44ffff","#88ffff","#bbffff","#eeffff","#ff44ff","#ff88ff","#ffbbff","#ffeeff","#ffff44","#ffff88","#ffffbb","#ffffee","#444444","#888888","#bbbbbb","#eeeeee","#44ff44","#88ff88","#bbffbb","#eeffee"]
 words = ["a","i","u","e","o"]
-#ch_names = [" F7-REF"," T7-REF"," Cz-REF"]
-ch_names = ["_F7-T7","_T7-Cz","_Cz-F7"]
+ch_names = [" F7-REF"," T7-REF"," Cz-REF"]
+#ch_names = ["_F7-T7","_T7-Cz","_Cz-F7"]
 fig_flag = 0
 b_num = len(ch_names)
 #b_num = 1
@@ -48,7 +70,7 @@ word_num = len(words)
 all_data = np.empty((b_num,0))
 one_data_len= 924
 one_state_num = 4
-one_state_len = round(one_data_len/one_state_num)
+one_state_len = math.floor(one_data_len/one_state_num)
 state_num = 1+len(words)*one_state_num
 data_div_state =[[[[] for i in range(one_state_num)] for j in range(b_num)] for k in range(word_num)]
 data_div_state_0 = [[]for i in range(b_num)]
@@ -60,47 +82,28 @@ set_init = True
 #test_num_rate = 0.7
 Restrict = 1
 #test_add_num = 10
-ensemble_num = 8
-hmm_trainnum_rates = [0.1,0.2,0.3,0.4,0.5]
-test_add_nums = [10,20,30,40,50] 
+ensemble_num = 5
+#test_add_nums = np.array([10,20,30,40,50,60,70])
+test_add_nums = np.array([50,60,70,80,90,100])
+hmm_train_num_rates = False #set later
+
 iteration = 10
 all_filted_data = []
 acc_list = []
-print("read start")
-for j in range(len(words)):
-	temp_sum_data = np.empty((0,one_data_len))
-	for k in range(b_num):
-		temp_data = [[] for i in range(one_state_num+1)]
 
-		
-		data = pd.read_csv(os.path.join(Data_Path,"data_"  + words[j] +ch_names[k] +".csv")).values
-		#Data_Path = os.path.join("/","mnt","c","Users","HirokiMaeda","Desktop","M1","1_word_HMM","data","vec_data")
-		#data = pd.read_csv(os.path.join(Data_Path,"data_a_Cz-F7.csv")).values
-		samplerate = 1000
-		fp = 30
-		fs = 50
+#read data
+all_filted_data = read_data(Data_Path,words,ch_names,one_data_len,one_state_num,b_num,samplerate=1000,fp=30,fs=50,gpass=3,gstop=40)
+(data_num,data_length) = all_filted_data[0].shape
 
-		gpass = 3
-		gstop = 40
-		filted_data = np.empty((0,data.shape[1]-100),float)
-		for i in range(data.shape[0]):
-			filted_data = np.vstack([filted_data,lowpass(data[i,:],samplerate,fp,fs,gpass,gstop)[50:-50]])	
-			#print("filted "+str(i)+" sample")
+hmm_train_num_rates = (test_add_nums*ensemble_num)/data_num
+test_num_rate = 1-hmm_train_num_rates
 
+hmm_train_num_rates = hmm_train_num_rates.tolist()
+test_add_nums = test_add_nums.tolist()
+test_num_rate = test_num_rate.tolist()
 
-		filted_data = (filted_data-filted_data.mean(axis=1).reshape(-1,1))/filted_data.std(axis=1).reshape(-1,1)
-		(data_num, data_length) = filted_data.shape
-				
-		
-		if j == 0 and k == 0:
-			all_filted_data = np.zeros((word_num*b_num,data_num,data_length))
-		####
-		all_filted_data[j*b_num+k] = filted_data	
-		#print(temp_sum_data.shape)
-
-print("read end")	
-for ver in range(len(hmm_trainnum_rates)):
-	hmm_trainnum_rate = hmm_trainnum_rates[ver]
+for ver in range(len(hmm_train_num_rates)):
+	hmm_trainnum_rate = hmm_train_num_rates[ver]
 	test_num_rate = 1-hmm_trainnum_rate
 	test_add_num = test_add_nums[ver]
 
@@ -111,8 +114,8 @@ for ver in range(len(hmm_trainnum_rates)):
 		print("iter : ",it)
 
 
-		train_num = round(data_num*hmm_trainnum_rate)
-		test_num = round(data_num*test_num_rate)
+		train_num = math.floor(data_num*hmm_trainnum_rate)
+		test_num = math.floor(data_num*test_num_rate)
 		train_shuffle = random.sample(range(data_num),data_num) 
 		print(f"data_num:{data_num}")
 		train_data = np.zeros([word_num*b_num,train_num,data_length])
@@ -213,7 +216,7 @@ for ver in range(len(hmm_trainnum_rates)):
 		ans_count = 0
 		for i in range(word_num):	
 			print("classification : ",i)
-			for j in range(round(test_num/test_add_num)):
+			for j in range(math.floor(test_num/test_add_num)):
 				temp = np.zeros((0,data_length))
 				temp_ans = np.zeros(ensemble_num)
 				for k in range(b_num):
@@ -239,3 +242,4 @@ for ver in range(len(hmm_trainnum_rates)):
 	acc_list.append(temp_acc_list)
 plt.boxplot(acc_list)
 plt.show()
+print(test_num)

@@ -2,14 +2,17 @@ import numpy as np
 import pandas as pd
 import os
 
-DataPath = os.path.join("/","mnt","c","Users","HirokiMaeda","Desktop","M1","data_tukiyama","SSBCI","SSBCI","recorded_EEGs","maeda","CSV")
+#DataPath = os.path.join("/","mnt","c","Users","HirokiMaeda","Desktop","M1","data_tukiyama","SSBCI","SSBCI","recorded_EEGs","maeda","CSV")
 
 #data = pd.read_csv(os.path.join(DataPath,"data_1","overt_1.CSV"))
 
 #print(data.head())
 
-StimulusPath = os.path.join("/","mnt","c","Users","HirokiMaeda","Desktop","M1","data_tukiyama","SSBCI","SSBCI","stimulus")
-Save_Path = os.path.join("/","mnt","c","Users","HirokiMaeda","Desktop","M1","1_word_HMM","data","div_data")
+#StimulusPath = os.path.join("/","mnt","c","Users","HirokiMaeda","Desktop","M1","data_tukiyama","SSBCI","SSBCI","stimulus")
+StimulusPath = os.path.join("/","mnt","c","Users","Hirok","Desktop","M1","data_tukiyama","SSBCI","SSBCI","stimulus")
+#Save_Path = os.path.join("/","mnt","c","Users","HirokiMaeda","Desktop","M1","1_word_HMM","data","covert","div_data")
+Save_Path = os.path.join("/","mnt","c","Users","Hirok","Desktop","M1","1_word_HMM","data","covert","div_data")
+
 #stimulusData = pd.read_excel(os.path.join(StimulusPath,"stimulus_1.xlsx"))
 
 #print(stimulusData.head())
@@ -25,6 +28,8 @@ segment_size = 1024
 Dataset_num = 60
 sub_names = ["maeda","shirai","sunaba","takahashi"]
 #ch_names = [" F7-REF"," T7-REF"," Cz-REF"]
+
+
 ch_names = [" F7-REF"," T7-REF"," P7-REF"," O1-REF"," O2-REF"," P8-REF"," T8-REF"," F8-REF"," Fp2-REF"," Fp1-REF"," F3-REF"," C5-REF"," P3-REF"," P4-REF"," C6-REF"," F4-REF"," Fz-REF"," Cz-REF"," Pz-REF"]
 
 
@@ -39,10 +44,11 @@ for ch_name in ch_names:
 	for set_num in range(Dataset_num):
 		stimulusData = pd.read_excel(os.path.join(StimulusPath,"stimulus_"+str(set_num+1)+".xlsx"))
 		for sub_name in sub_names:
-			DataPath = os.path.join("/","mnt","c","Users","HirokiMaeda","Desktop","M1","data_tukiyama","SSBCI","SSBCI","recorded_EEGs",sub_name,"CSV")
+			#DataPath = os.path.join("/","mnt","c","Users","HirokiMaeda","Desktop","M1","data_tukiyama","SSBCI","SSBCI","recorded_EEGs",sub_name,"CSV")
+			DataPath = os.path.join("/","mnt","c","Users","Hirok","Desktop","M1","data_tukiyama","SSBCI","SSBCI","recorded_EEGs",sub_name,"CSV")
 
 		 
-			data = pd.read_csv(os.path.join(DataPath,"data_"+str(set_num+1),"overt_"+str(set_num+1)+".CSV"))
+			data = pd.read_csv(os.path.join(DataPath,"data_"+str(set_num+1),"covert_"+str(set_num+1)+".CSV"))
 			dev_data = np.empty((0,segment_size),float)
 			for i in range(len(data)-1):
 				if(data.loc[i," EXT"]>10000 and flag ==0 ):
@@ -58,7 +64,7 @@ for ch_name in ch_names:
 
 			print(count)
 
-			stimulus_num = stimulusData["overt"].str[0].astype(int)
+			stimulus_num = stimulusData["covert"].str[0].astype(int)
 
 			for i in range(len(stimulusData)):
 				if(stimulus_num[i]==1):

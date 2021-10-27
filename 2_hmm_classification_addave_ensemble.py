@@ -14,6 +14,7 @@ import random
 import statistics
 
 
+#filtaring method
 def lowpass(x, samplerate, fp, fs, gpass, gstop):
 	fn = samplerate/2
 	wp = fp/fn
@@ -23,12 +24,34 @@ def lowpass(x, samplerate, fp, fs, gpass, gstop):
 	y = signal.filtfilt(b,a,x)
 	return y
 
-#Data_Path = os.path.join("/","mnt","c","Users","HirokiMaeda","Desktop","M1","1_word_HMM","data","vec_data")
-##Data_Path = os.path.join("/","mnt","c","Users","HirokiMaeda","Desktop","M1","1_word_HMM","data","div_data")
 
+#read data method
+def read_data(Data_Path,words,ch_names,one_data_len,one_state_num,b_num,samplerate=1000,fp=30,fs=50,gpass=3,gstop=40):	
+	all_filted_data = []
+	word_num = len(words)
+	print("read end")
+	for j in range(len(words)):
+		for k in range(len(ch_names)):
+	
+			data = pd.read_csv(os.path.join(Data_Path,"data_"  + words[j] +ch_names[k] +".csv")).values
+		
+			filted_data = np.empty((0,data.shape[1]-100),float)
+			for i in range(data.shape[0]):
+				filted_data = np.vstack([filted_data,lowpass(data[i,:],samplerate,fp,fs,gpass,gstop)[50:-50]])	
+				
 
-#Save_Path =  os.path.join("/","mnt","c","Users","HirokiMaeda","Desktop","M1","1_word_HMM","picture")
+			filted_data = (filted_data-filted_data.mean(axis=1).reshape(-1,1))/filted_data.std(axis=1).reshape(-1,1)
+				
+			
+			if j == 0 and k == 0:
+				(data_num, data_length) = filted_data.shape	
+				all_filted_data = np.zeros((word_num*b_num,data_num,data_length))
+			####
+			all_filted_data[j*b_num+k] = filted_data	
+	print("read end")	
 
+	return all_filted_data
+	
 Data_Path = os.path.join("/","mnt","c","Users","Hirok","Desktop","M1","1_word_HMM","data","vec_data")
 #Data_Path = os.path.join("/","mnt","c","Users","Hirok","Desktop","M1","1_word_HMM","data","div_data")
 
@@ -53,47 +76,20 @@ data_div_state =[[[[] for i in range(one_state_num)] for j in range(b_num)] for 
 data_div_state_0 = [[]for i in range(b_num)]
 sum_data = np.empty((b_num,0))
 set_init = True
-hmm_trainnum_rate = 0.3
-#classification_modelnum_rate = 0.4
-test_num_rate = 0.7
 Restrict = 1
+hmm_train_num_rate = False #set later 
+test_num_rate = False #set later
+
 test_add_num = 10
 ensemble_num = 7
 
-all_filted_data = []
-print("read start")
-for j in range(len(words)):
-	temp_sum_data = np.empty((0,one_data_len))
-	for k in range(b_num):
-		temp_data = [[] for i in range(one_state_num+1)]
+#read data
+all_filted_data = read_data(Data_Path,words,ch_names,one_data_len,one_state_num,b_num,samplerate=1000,fp=30,fs=50,gpass=3,gstop=40)
+(data_num,data_length) = all_filted_data[0].shape
 
-		
-		data = pd.read_csv(os.path.join(Data_Path,"data_"  + words[j] +ch_names[k] +".csv")).values
-		#Data_Path = os.path.join("/","mnt","c","Users","HirokiMaeda","Desktop","M1","1_word_HMM","data","vec_data")
-		#data = pd.read_csv(os.path.join(Data_Path,"data_a_Cz-F7.csv")).values
-		samplerate = 1000
-		fp = 30
-		fs = 50
-
-		gpass = 3
-		gstop = 40
-		filted_data = np.empty((0,data.shape[1]-100),float)
-		for i in range(data.shape[0]):
-			filted_data = np.vstack([filted_data,lowpass(data[i,:],samplerate,fp,fs,gpass,gstop)[50:-50]])	
-			#print("filted "+str(i)+" sample")
-
-
-		filted_data = (filted_data-filted_data.mean(axis=1).reshape(-1,1))/filted_data.std(axis=1).reshape(-1,1)
-		(data_num, data_length) = filted_data.shape
-				
-		
-		if j == 0 and k == 0:
-			all_filted_data = np.zeros((word_num*b_num,data_num,data_length))
-		####
-		all_filted_data[j*b_num+k] = filted_data	
-		#print(temp_sum_data.shape)
-print("read end")	
-train_num = round(data_num*hmm_trainnum_rate)
+hmm_train_num_rate = (test_add_num*ensemble_num)/data_num
+test_num_rate = 1-hmm_train_num_rate
+train_num = round(data_num*hmm_train_num_rate)
 test_num = round(data_num*test_num_rate)
 train_shuffle = random.sample(range(data_num),data_num) 
 print(f"data_num:{data_num}")
@@ -192,6 +188,7 @@ print("train end")
 print("classification start")
 prob_ans = np.zeros(word_num*ensemble_num)
 ans_count = 0
+confusion_matrix = np.zeros((word_num,word_num))
 for i in range(word_num):	
 	print("classification : ",i)
 	for j in range(round(test_num/test_add_num)):
@@ -211,9 +208,15 @@ for i in range(word_num):
 		
 
 		ans.append(int(statistics.mode(temp_ans)))		
+		
+		confusion_matrix[i,ans[-1]] += 1
+
 		if ans[-1]==i:
 			ans_count +=1
 print("classification end")
 print("ans : ",ans)
 print("ans rate  : ",ans_count/(word_num*test_num/test_add_num))
-
+print("confusion matrix")
+print(confusion_matrix)
+for k in range(word_num*ensemble_num):
+	print(model[k].startprob_)	

@@ -11,3 +11,8 @@
 
 cross_correlate_porogram.py				:calculate cross corirate and plot
 
+####refactaring program####
+1.2_hmm_classification.py				:remake hmm_classification_program_3.py
+2.2_hmm_classification_addave.py			:remake hmm_classification_program_addave.py
+3.2_hmm_classification_addave_ensemble.py		:remake hmm_classification_program_addave_ensemble.py
+4.2_hmm_classification_addave_ensemble_accplot.py	:remake hmm_classification_program_addave_ensemble_accplot.py 
