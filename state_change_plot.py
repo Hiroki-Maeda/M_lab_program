@@ -52,17 +52,18 @@ def read_data(Data_Path,words,ch_names,one_data_len,one_state_num,b_num,samplera
 
 	return all_filted_data
 
-#Data_Path = os.path.join("/","mnt","c","Users","Hirok","Desktop","M1","1_word_HMM","data","covert","vec_data")
-Data_Path = os.path.join("/","mnt","c","Users","Hirok","Desktop","M1","1_word_HMM","data","overt","div_data")
+Data_Path = os.path.join("/","mnt","c","Users","Hirok","Desktop","M1","1_word_HMM","data","covert","vec_data")
+#Data_Path = os.path.join("/","mnt","c","Users","Hirok","Desktop","M1","1_word_HMM","data","overt","div_data")
 
 
 Save_Path =  os.path.join("/","mnt","c","Users","Hirok","Desktop","M1","1_word_HMM","picture")
 
 
 color = ["#000000","#44ffff","#88ffff","#bbffff","#eeffff","#ff44ff","#ff88ff","#ffbbff","#ffeeff","#ffff44","#ffff88","#ffffbb","#ffffee","#444444","#888888","#bbbbbb","#eeeeee","#44ff44","#88ff88","#bbffbb","#eeffee"]
+label_color = ["red","green","blue","#aaaaaa","#555555"]
 words = ["a","i","u","e","o"]
-ch_names = [" F7-REF"," T7-REF"," Cz-REF"]
-#ch_names = ["_F7-T7","_T7-Cz","_Cz-F7"]
+#ch_names = [" F7-REF"," T7-REF"," Cz-REF"]
+ch_names = ["_F7-T7","_T7-Cz","_Cz-F7"]
 fig_flag = 0
 b_num = len(ch_names)
 #b_num = 1
@@ -101,6 +102,7 @@ test_num_rate = 1-hmm_train_num_rates
 hmm_train_num_rates = hmm_train_num_rates.tolist()
 test_add_nums = test_add_nums.tolist()
 test_num_rate = test_num_rate.tolist()
+plot_height = 0
 
 for ver in range(len(hmm_train_num_rates)):
 	hmm_trainnum_rate = hmm_train_num_rates[ver]
@@ -109,8 +111,11 @@ for ver in range(len(hmm_train_num_rates)):
 
 
 	temp_acc_list =[]
+	handle=[]
 
 	for it in range(iteration):
+		plt.figure(figsize=(20,10))
+
 		print("iter : ",it)
 
 
@@ -228,22 +233,43 @@ for ver in range(len(hmm_train_num_rates)):
 					prob_ans[k] = model[k].score(temp.T)
 				if j==0:
 					print(prob_ans)
-				
+				"""	
 				for k in range(ensemble_num):
 					temp_ans[k] = np.argmax(prob_ans[k:word_num*ensemble_num:ensemble_num])
-			
-				#temp_ans_most_plob = np.argmax(prob_ans)
+				"""	
+				temp_ans_most_plob = np.argmax(prob_ans)
 					
-
-				ans.append(int(statistics.mode(temp_ans)))		
-				#ans.append(math.floor(temp_ans_most_plob/ensemble_num))
+				statelist = model[temp_ans_most_plob].predict(temp.T) 
+				x_plot = np.linspace(0,statelist.shape[0],statelist.shape[0])
+				y_plot = np.full(statelist.shape[0],plot_height)
+				color_list = [label_color[x] for x in statelist]
+				plt.scatter(x_plot,y_plot,label=words[i],color=color_list,marker=".")	
+				#ans.append(int(statistics.mode(temp_ans)))		
+				ans.append(math.floor(temp_ans_most_plob/ensemble_num))
+				plt.scatter(statelist.shape[0]+1,plot_height,color="#000000",marker="${}$".format(words[ans[-1]]))	
+				plot_height +=1	
+	
 				if ans[-1]==i:
 					ans_count +=1
+			y_plot = np.full(statelist.shape[0],plot_height)
+			plt.scatter(x_plot,y_plot,label=words[i],color="#000000",marker=".")	
+			plot_height +=1	
+
+		#plt.legend(handle,label_color)
 		print("classification end")
 		print("ans : ",ans)
 		print("ans rate  : ",ans_count/(word_num*test_num/test_add_num))
 		temp_acc_list.append(ans_count/(word_num*test_num/test_add_num))
+		plt.show()
+		plot_height = 0
+
+
+	#plt.legend(handle,label_color)
+	#plt.show()
+
+
 	acc_list.append(temp_acc_list)
+plt.figure(figsize=(20,10))	
 plt.boxplot(acc_list)
 plt.show()
 print(test_num)
