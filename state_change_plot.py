@@ -52,8 +52,8 @@ def read_data(Data_Path,words,ch_names,one_data_len,one_state_num,b_num,samplera
 
 	return all_filted_data
 
-Data_Path = os.path.join("/","mnt","c","Users","Hirok","Desktop","M1","1_word_HMM","data","covert","vec_data")
-#Data_Path = os.path.join("/","mnt","c","Users","Hirok","Desktop","M1","1_word_HMM","data","overt","div_data")
+#Data_Path = os.path.join("/","mnt","c","Users","Hirok","Desktop","M1","1_word_HMM","data","covert","vec_data")
+Data_Path = os.path.join("/","mnt","c","Users","Hirok","Desktop","M1","1_word_HMM","data","overt","div_data")
 
 
 Save_Path =  os.path.join("/","mnt","c","Users","Hirok","Desktop","M1","1_word_HMM","picture")
@@ -63,13 +63,17 @@ color = ["#000000","#44ffff","#88ffff","#bbffff","#eeffff","#ff44ff","#ff88ff","
 label_color = ["red","green","blue","#aaaaaa","#555555"]
 words = ["a","i","u","e","o"]
 #ch_names = [" F7-REF"," T7-REF"," Cz-REF"]
-ch_names = ["_F7-T7","_T7-Cz","_Cz-F7"]
+ch_names = [" F7-REF"]
+
+#ch_names = ["_F7-T7","_T7-Cz","_Cz-F7"]
 fig_flag = 0
 b_num = len(ch_names)
 #b_num = 1
 word_num = len(words)
 all_data = np.empty((b_num,0))
 one_data_len= 924
+#one_data_len= 400
+
 one_state_num = 4
 one_state_len = math.floor(one_data_len/one_state_num)
 state_num = 1+len(words)*one_state_num
@@ -93,7 +97,9 @@ all_filted_data = []
 acc_list = []
 
 #read data
-all_filted_data = read_data(Data_Path,words,ch_names,one_data_len,one_state_num,b_num,samplerate=1000,fp=30,fs=50,gpass=3,gstop=40)
+#all_filted_data = read_data(Data_Path,words,ch_names,one_data_len,one_state_num,b_num,samplerate=1000,fp=30,fs=50,gpass=3,gstop=40)
+all_filted_data = read_data(Data_Path,words,ch_names,one_data_len,one_state_num,b_num,samplerate=1000,fp=30,fs=50,gpass=3,gstop=40)[:,:,0:one_data_len]
+
 (data_num,data_length) = all_filted_data[0].shape
 
 hmm_train_num_rates = (test_add_nums*ensemble_num)/data_num
@@ -114,8 +120,8 @@ for ver in range(len(hmm_train_num_rates)):
 	handle=[]
 
 	for it in range(iteration):
-		plt.figure(figsize=(20,10))
-
+		fig_state = plt.figure(figsize=(20,10))
+		ax_state = fig_state.add_subplot(1,1,1)
 		print("iter : ",it)
 
 
@@ -219,7 +225,12 @@ for ver in range(len(hmm_train_num_rates)):
 		print("classification start")
 		prob_ans = np.zeros(word_num*ensemble_num)
 		ans_count = 0
+		fig ,ax= plt.subplots(3,1,figsize=(20,10))
+		
+
 		for i in range(word_num):	
+			flag_add_plot = 0
+			handles = []
 			print("classification : ",i)
 			for j in range(math.floor(test_num/test_add_num)):
 				temp = np.zeros((0,data_length))
@@ -243,16 +254,23 @@ for ver in range(len(hmm_train_num_rates)):
 				x_plot = np.linspace(0,statelist.shape[0],statelist.shape[0])
 				y_plot = np.full(statelist.shape[0],plot_height)
 				color_list = [label_color[x] for x in statelist]
-				plt.scatter(x_plot,y_plot,label=words[i],color=color_list,marker=".")	
+				ax_state.scatter(x_plot,y_plot,label=words[i],color=color_list,marker=".")	
 				#ans.append(int(statistics.mode(temp_ans)))		
 				ans.append(math.floor(temp_ans_most_plob/ensemble_num))
-				plt.scatter(statelist.shape[0]+1,plot_height,color="#000000",marker="${}$".format(words[ans[-1]]))	
+				ax_state.scatter(statelist.shape[0]+1,plot_height,color="#000000",marker="${}$".format(words[ans[-1]]))	
 				plot_height +=1	
 	
 				if ans[-1]==i:
 					ans_count +=1
+					for l in range(b_num):
+
+						ax[l].set_title(ch_names[l])
+						line = ax[l].plot(x_plot,temp[l],label=words[i],color=label_color[i])
+						if flag_add_plot == 0:
+							handles.append(line)				
+							flag_add_plot = 1		
 			y_plot = np.full(statelist.shape[0],plot_height)
-			plt.scatter(x_plot,y_plot,label=words[i],color="#000000",marker=".")	
+			ax_state.scatter(x_plot,y_plot,label=words[i],color="#000000",marker=".")	
 			plot_height +=1	
 
 		#plt.legend(handle,label_color)
@@ -260,9 +278,17 @@ for ver in range(len(hmm_train_num_rates)):
 		print("ans : ",ans)
 		print("ans rate  : ",ans_count/(word_num*test_num/test_add_num))
 		temp_acc_list.append(ans_count/(word_num*test_num/test_add_num))
-		plt.show()
+		fig_state.show()
 		plot_height = 0
-
+		print("check")
+		print(len(handles))
+		print(len(label_color))
+		if len(handles) == len(label_color):	
+			for l in range(b_num):	
+				print("legend set")
+				ax[l].legend(handles[l,l+len(handles):b_num],label_color)
+		fig.show()
+		input()	
 
 	#plt.legend(handle,label_color)
 	#plt.show()

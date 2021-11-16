@@ -62,6 +62,8 @@ Save_Path =  os.path.join("/","mnt","c","Users","Hirok","Desktop","M1","1_word_H
 color = ["#000000","#44ffff","#88ffff","#bbffff","#eeffff","#ff44ff","#ff88ff","#ffbbff","#ffeeff","#ffff44","#ffff88","#ffffbb","#ffffee","#444444","#888888","#bbbbbb","#eeeeee","#44ff44","#88ff88","#bbffbb","#eeffee"]
 words = ["a","i","u","e","o"]
 ch_names = [" F7-REF"," T7-REF"," Cz-REF"]
+#ch_names = [" F7-REF"]
+
 #ch_names = ["_F7-T7","_T7-Cz","_Cz-F7"]
 fig_flag = 0
 b_num = len(ch_names)
@@ -69,6 +71,8 @@ b_num = len(ch_names)
 word_num = len(words)
 all_data = np.empty((b_num,0))
 one_data_len= 924
+#one_data_len= 400
+
 one_state_num = 4
 one_state_len = math.floor(one_data_len/one_state_num)
 state_num = 1+len(words)*one_state_num
@@ -92,7 +96,10 @@ all_filted_data = []
 acc_list = []
 
 #read data
-all_filted_data = read_data(Data_Path,words,ch_names,one_data_len,one_state_num,b_num,samplerate=1000,fp=30,fs=50,gpass=3,gstop=40)
+
+#all_filted_data = read_data(Data_Path,words,ch_names,one_data_len,one_state_num,b_num,samplerate=1000,fp=30,fs=50,gpass=3,gstop=40)
+all_filted_data = read_data(Data_Path,words,ch_names,one_data_len,one_state_num,b_num,samplerate=1000,fp=30,fs=50,gpass=3,gstop=40)[:,:,0:one_data_len]
+
 (data_num,data_length) = all_filted_data[0].shape
 
 hmm_train_num_rates = (test_add_nums*ensemble_num)/data_num
