@@ -62,8 +62,8 @@ Save_Path =  os.path.join("/","mnt","c","Users","Hirok","Desktop","M1","1_word_H
 color = ["#000000","#44ffff","#88ffff","#bbffff","#eeffff","#ff44ff","#ff88ff","#ffbbff","#ffeeff","#ffff44","#ffff88","#ffffbb","#ffffee","#444444","#888888","#bbbbbb","#eeeeee","#44ff44","#88ff88","#bbffbb","#eeffee"]
 label_color = ["red","green","blue","#aaaaaa","#555555"]
 words = ["a","i","u","e","o"]
-#ch_names = [" F7-REF"," T7-REF"," Cz-REF"]
-ch_names = [" F7-REF"]
+ch_names = [" F7-REF"," T7-REF"," Cz-REF"]
+#ch_names = [" F7-REF"]
 
 #ch_names = ["_F7-T7","_T7-Cz","_Cz-F7"]
 fig_flag = 0

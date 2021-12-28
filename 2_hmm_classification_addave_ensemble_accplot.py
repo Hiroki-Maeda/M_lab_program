@@ -226,6 +226,8 @@ for ver in range(len(hmm_train_num_rates)):
 			for j in range(math.floor(test_num/test_add_num)):
 				temp = np.zeros((0,data_length))
 				temp_ans = np.zeros(ensemble_num)
+				temp_prob = np.zeros(ensemble_num)
+
 				for k in range(b_num):
 					temp = np.vstack([temp,test_data[i*b_num+k,j*test_add_num:(1+j)*test_add_num,:].mean(axis=0)]) 
 				if j == 0:
@@ -238,11 +240,27 @@ for ver in range(len(hmm_train_num_rates)):
 				
 				for k in range(ensemble_num):
 					temp_ans[k] = np.argmax(prob_ans[k:word_num*ensemble_num:ensemble_num])
-			
+					temp_prob[k] = np.max(prob_ans[k:word_num*ensemble_num:ensemble_num])
+	
 				#temp_ans_most_plob = np.argmax(prob_ans)
 					
+				count_ans = collections.Counter(temp_ans)
+				max_count = max(count_ans.values())
+				max_ans = []
+				for l in range(word_num):
+					if count_ans[l] == max_count :
+						max_ans.append(l)
+				if not len(max_ans) ==1:
+					temp_prob_cf = -float("inf")
+					for l in range(len(max_ans)):
+						if temp_prob_cf <np.max(np.array(temp_prob)[temp_ans==max_ans[l]]):	
+							temp_prob_cf = np.max(np.array(temp_prob)[temp_ans==max_ans[l]])	
+							temp_ans_cf = max_ans[l]
+				else:
+					temp_ans_cf = max_ans[0]			
+				ans.append(temp_ans_cf)	
 
-				ans.append(int(statistics.mode(temp_ans)))		
+				#ans.append(int(statistics.mode(temp_ans)))		
 				#ans.append(math.floor(temp_ans_most_plob/ensemble_num))
 				if ans[-1]==i:
 					ans_count +=1
